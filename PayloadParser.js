@@ -1,0 +1,170 @@
+function parseUplink(device, payload)
+{
+	function ExtractTagData(tagValuesObject){
+        v = null;
+        q = null;
+        ts = null;
+        return {
+            v: (tagValuesObject["v"]),
+            q: tagValuesObject["q"],
+            ts: new Date(tagValuesObject["ts"]).toUTCString()
+        }
+    }
+
+    var N3uronData = payload.asJsonObject();
+	
+    env.log(N3uronData);
+ 
+   //Recorremos cada "tag" del array del json y procesamos lo que nos interesan
+  for (let tag in N3uronData) {
+  
+        switch (tag){
+            case "/Turbo4/Ia":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("Ia");
+                    etv1.updateCurrentSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                    //etv1.updateGenericSensorStatus(ValueData.v, ValueData.ts);
+                });
+                break;
+
+            case "/Turbo4/Ib":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("Ib");
+                    etv1.updateCurrentSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                    //etv1.updateGenericSensorStatus(ValueData.v, ValueData.ts);
+                });
+                break;
+
+            case "/Turbo4/Ic":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("Ic");
+                   etv1.updateCurrentSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                   //etv1.updateGenericSensorStatus(ValueData.v, ValueData.ts);
+                });
+                break;
+
+                case "/Turbo4/V_LL_Avg":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("V_LL_Avg");
+                    etv1.updateVoltageSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                    //etv1.updateGenericSensorStatus(ValueData.v, ValueData.ts);
+                });
+                break;
+
+                case "/Turbo4/Cos":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("Cos");
+                    if(ValueData.v != null){
+                        etv1.updateCosPhiSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                    }else{
+                        etv1.updateCosPhiSensorStatus(0, ValueData.ts);
+                    }
+                    
+                });
+                break;
+
+                case "/Turbo4/PAtot":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("PAtot");
+                    etv1.updateActivePowerSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                    //etv1.updateGenericSensorStatus(ValueData.v, ValueData.ts);
+                });
+                break;
+
+                case "/Turbo4/EnergActTot":
+                //Obtenemos el array con lecturas de este tag
+                var tagvalues = N3uronData[tag];
+                //Recorremos las lecturas y leemos los valores v, q y ts
+                tagvalues.forEach(valueElement => {
+                    var ValueData = ExtractTagData(valueElement);
+                    //Listo, actualizamos el endpoint
+                    var etv1 = device.endpoints.byAddress("EnergActTot");
+                    //etv1.updateenergySensorStatus(ValueData.v, ValueData.ts);
+                    etv1.updateGenericSensorStatus(ValueData.v.toFixed(2), ValueData.ts);
+                });
+                break;
+
+
+                
+        }
+   }
+
+}
+
+function buildDownlink(device, endpoint, command, payload) 
+{ 
+	// Esta función permite convertir un comando de la plataforma en un
+	// payload que pueda enviarse al dispositivo.
+	// Más información en https://wiki.cloud.studio/page/200
+
+	// Los parámetros de esta función, son:
+	// - device: objeto representando el dispositivo al cual se enviará el comando.
+	// - endpoint: objeto endpoint representando el endpoint al que se enviará el 
+	//   comando. Puede ser null si el comando se envía al dispositivo, y no a 
+	//   un endpoint individual dentro del dispositivo.
+	// - command: objeto que contiene el comando que se debe enviar. Más
+	//   información en https://wiki.cloud.studio/page/1195.
+
+	// Este ejemplo está escrito asumiendo un dispositivo que contiene un único 
+	// endpoint, de tipo appliance, que se puede encender, apagar y alternar. 
+	// Se asume que se debe enviar un solo byte en el payload, que indica el tipo 
+	// de operación.
+
+/*
+	 payload.port = 25; 	 	 // Este dispositivo recibe comandos en el puerto LoRaWAN 25 
+	 payload.buildResult = downlinkBuildResult.ok; 
+
+	 switch (command.type) { 
+	 	 case commandType.onOff: 
+	 	 	 switch (command.onOff.type) { 
+	 	 	 	 case onOffCommandType.turnOn: 
+	 	 	 	 	 payload.setAsBytes([30]); 	 	 // El comando 30 indica "encender" 
+	 	 	 	 	 break; 
+	 	 	 	 case onOffCommandType.turnOff: 
+	 	 	 	 	 payload.setAsBytes([31]); 	 	 // El comando 31 indica "apagar" 
+	 	 	 	 	 break; 
+	 	 	 	 case onOffCommandType.toggle: 
+	 	 	 	 	 payload.setAsBytes([32]); 	 	 // El comando 32 indica "alternar" 
+	 	 	 	 	 break; 
+	 	 	 	 default: 
+	 	 	 	 	 payload.buildResult = downlinkBuildResult.unsupported; 
+	 	 	 	 	 break; 
+	 	 	 } 
+	 	 	 break; 
+	 	 default: 
+	 	 	 payload.buildResult = downlinkBuildResult.unsupported; 
+	 	 	 break; 
+	 }
+*/
+
+}
